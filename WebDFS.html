@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Visualization</title>
+
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: monospace;
+        }
+        .maze {
+            line-height: 1;
+        }
+        .cell {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+        }
+        .wall { background-color: grey; }
+        .empty { background-color: black; }
+        .start { background-color: green; }
+        .finish { background-color: blue; }
+        .path { background-color: red; }
+    </style>
+
+    </head>
+
+    <body>
+
+        <div id="maze" class="maze"></div>
+
+        <script>
+        let n = 11, m = 14;
+        let a = [
+        "##############",
+        "#@....#......#",
+        "###.#...#.##.#",
+        "#...#.....#..#",
+        "#.#.....#.##.#",
+        "#.....#.#....#",
+        "#.###.#....###",
+        "#.#...#......#",
+        "#.#.#...#....#",
+        "##...$......##",
+        "##############"
+        ];
+
+        a = a.map(line => line.split(""));
+
+        // DFS + Minimal Path
+        let arrMinPath_i1 = [], arrMinPath_j1 = [];
+        let arrMinPath_i2 = [], arrMinPath_j2 = [];
+
+        function fill_Matrix(){
+            for(let i=0;i<n;i++){
+                for(let j=0;j<m;j++){
+                    if(a[i][j]=='!'){
+                        arrMinPath_i2.push(i);
+                        arrMinPath_j2.push(j);
+                    }
+                }
+            }
+            if(arrMinPath_i1.length==0 || arrMinPath_i2.length<=arrMinPath_i1.length){
+                arrMinPath_i1 = [...arrMinPath_i2];
+                arrMinPath_j1 = [...arrMinPath_j2];
+            }
+            arrMinPath_i2 = [];
+            arrMinPath_j2 = [];
+        }
+
+        function DFS(i,j){
+            if(i<0||i>=n||j<0||j>=m||a[i][j]=='#'||a[i][j]=='!') return;
+            if(a[i][j]=='$'){ fill_Matrix(); return; }
+            if(a[i][j]=='.') a[i][j]='!';
+            
+            DFS(i,j+1); DFS(i+1,j); DFS(i,j-1); DFS(i-1,j);
+            
+            if(a[i][j]=='!') a[i][j]='.';
+        }
+
+        // Start DFS from '@'
+        let found=false;
+        for(let i=0;i<n;i++){
+            for(let j=0;j<m;j++){
+                if(a[i][j]=='@'){
+                    found=true;
+                    DFS(i,j);
+                }
+            }
+            if(found) break;
+        }
+
+        // Build final array with minimal path
+        let arr = a.map(row => [...row]);
+        for(let k=0;k<arrMinPath_i1.length;k++){
+            arr[arrMinPath_i1[k]][arrMinPath_j1[k]]='!';
+        }
+
+        // Display maze with colors
+        let mazeDiv = document.getElementById('maze');
+        for(let i=0; i<n; i++){
+            for(let j=0; j<m; j++){
+                let span = document.createElement('span');
+                span.classList.add('cell');
+                let val = arr[i][j];
+                if(val=='#') span.classList.add('wall');
+                else if(val=='.') span.classList.add('empty');
+                else if(val=='@') span.classList.add('start');
+                else if(val=='$') span.classList.add('finish');
+                else if(val=='!') span.classList.add('path');
+                mazeDiv.appendChild(span);
+            }
+            mazeDiv.appendChild(document.createElement('br'));
+        }
+        </script>
+
+    </body>
+</html>
